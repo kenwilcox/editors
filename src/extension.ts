@@ -49,7 +49,7 @@ class WordCounter {
             let wordCount = this._getWordCount(doc);
 
             // Update the status bar
-            this._statusBarItem.text = wordCount !== 1? `${wordCount} Words`: '1 Word';
+            this._statusBarItem.text = wordCount !== 1? `$(pencil) ${wordCount} Words`: '$(pencil) 1 Word';
             this._statusBarItem.show();
         } else {
             this._statusBarItem.hide();
@@ -88,6 +88,7 @@ class WordCounterController {
         // update the counter for the current file
         this._wordCounter.updateWordCount(); // already did this above?
         // create a combined disposible from both event subscriptions
+        // ... spread operator
         this._disposable = Disposable.from(...subscriptions);
     }
 
