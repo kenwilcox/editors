@@ -13,6 +13,7 @@ export function activate(context: ExtensionContext) {
     console.log('Congratulations, your extension "WordCount" is now active!');
 
     let wordCounter = new WordCounter();
+    let controller = new WordCounterController(wordCounter);
 
     // The command has been defined in the package.json file
     // Now provide the implementation of the command with  registerCommand
@@ -22,8 +23,9 @@ export function activate(context: ExtensionContext) {
         wordCounter.updateWordCount();
     });
 
+    // shouldn't these be switched around?
+    context.subscriptions.push(controller);    
     context.subscriptions.push(wordCounter);
-    context.subscriptions.push(disposable);
 }
 
 class WordCounter {
@@ -68,5 +70,32 @@ class WordCounter {
 
     dispose() {
         this._statusBarItem.dispose();
+    }
+}
+
+class WordCounterController {
+    private _wordCounter: WordCounter;
+    private _disposable: Disposable;
+
+    constructor(wordCounter: WordCounter) {
+        this._wordCounter = wordCounter;
+        this._wordCounter.updateWordCount();
+
+        let subscriptions: Disposable[] = [];
+        window.onDidChangeTextEditorSelection(this._onEvent, this, subscriptions);
+        window.onDidChangeActiveTextEditor(this._onEvent, this, subscriptions);
+
+        // update the counter for the current file
+        this._wordCounter.updateWordCount(); // already did this above?
+        // create a combined disposible from both event subscriptions
+        this._disposable = Disposable.from(...subscriptions);
+    }
+
+    dispose() {
+        this._disposable.dispose();
+    }
+
+    private _onEvent() {
+        this._wordCounter.updateWordCount();
     }
 }
