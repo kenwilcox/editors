@@ -2,7 +2,8 @@
 // The module 'vscode' contains the VS Code extensibility API
 // Import the module and reference it with the alias vscode in your code below
 import {window, commands, Disposable, ExtensionContext, StatusBarAlignment, StatusBarItem,
-    TextDocument} from 'vscode';
+    TextDocument, workspace} from 'vscode';
+import {exec, ExecOptions} from 'child_process';  
 
 // this method is called when your extension is activated
 // your extension is activated the very first time the command is executed
@@ -10,85 +11,92 @@ export function activate(context: ExtensionContext) {
 
     // Use the console to output diagnostic information (console.log) and errors (console.error)
     // This line of code will only be executed once when your extension is activated
-    console.log('Congratulations, your extension "WordCount" is now active!');
+    console.log('Congratulations, your extension "Editors" is now active!');
 
-    let wordCounter = new WordCounter();
-    let controller = new WordCounterController(wordCounter);
+    let editors = new Editors(context);
+    let controller = new EditorsController(editors);
+    editors.load();
 
-    // The command has been defined in the package.json file
-    // Now provide the implementation of the command with  registerCommand
-    // The commandId parameter must match the command field in package.json
-    let disposable = commands.registerCommand('extension.sayHello', () => {
-        // The code you place here will be executed every time your command is executed
-        wordCounter.updateWordCount();
-    });
-
-    // shouldn't these be switched around?
-    context.subscriptions.push(controller);    
-    context.subscriptions.push(wordCounter);
+    context.subscriptions.push(editors);
+    context.subscriptions.push(controller);
 }
 
-class WordCounter {
-    private _statusBarItem: StatusBarItem;
-    public updateWordCount() {
-        // Create as needed
-        if (!this._statusBarItem) {
-            this._statusBarItem = window.createStatusBarItem(StatusBarAlignment.Left);
-        }
+class Editors {
+    private _statusBarItems: StatusBarItem[];
+    private _editors: any[];
+    private _context: ExtensionContext;
+    
+    constructor(context: ExtensionContext) {
+        this._context = context;
+    }
+    
+    public load() {        
+        console.log("Editors.load()");
+        let config = workspace.getConfiguration();
+        if (config.has("editors")) {
+            this._editors = config.get("editors", []);
+            console.log(this._editors);
+            this._editors.forEach(editor => {
+                var name = editor["name"];
+                var cmd = editor["command"];
+                var label = editor["label"];
+                
+                let disposable = commands.registerCommand("extension.openInExternalEditor_" + name, () => {                    
+                    //window.activeTextEditor.document.save();
+                    //window.showInformationMessage("starting: " + cmd)
+                    // exec command, options, callback
+                    console.log(window.activeTextEditor.document.fileName);
+                    let file = window.activeTextEditor.document.fileName;
+                    var child = exec(`"${cmd}" "${file}"`);
+                    child.stdout.on('data', (data) => {
+                        window.showInformationMessage(data);
+                    });
+                });                
+                
+                this._context.subscriptions.push(disposable);
 
-        // Get the current text editor
+                var statusBarItem = window.createStatusBarItem(StatusBarAlignment.Left);
+                statusBarItem.text = label;
+                statusBarItem.command = "extension.openInExternalEditor_" + name;
+                statusBarItem.show();
+                
+            })
+        }
+    }
+    
+    public update() {
+        console.log("Editors.update()");
         let editor = window.activeTextEditor;
+        
         if (!editor) {
-            this._statusBarItem.hide();
+            this._statusBarItems.forEach(element => {
+                element.hide();
+            })
             return;
         }
-
-        let doc = editor.document;
-        // Only update status if it's a Markdown file
-        if (doc.languageId === "markdown") {
-            let wordCount = this._getWordCount(doc);
-
-            // Update the status bar
-            this._statusBarItem.text = wordCount !== 1? `$(pencil) ${wordCount} Words`: '$(pencil) 1 Word';
-            this._statusBarItem.show();
-        } else {
-            this._statusBarItem.hide();
-        }
     }
 
-    public _getWordCount(doc: TextDocument): number {
-        let docContent = doc.getText();
-        // Parse out unwanted whitespace so the split is accurate
-        docContent = docContent.replace(/(< ([^>]+)<)/g, '').replace(/\s+/g, ' ');
-        docContent = docContent.replace(/^\s\s*/, '').replace(/\s\s*$/, '');
-        let wordCount = 0;
-        if (docContent != "") {
-            wordCount = docContent.split(" ").length;
-        }
-        return wordCount;
-    }
-
-    dispose() {
-        this._statusBarItem.dispose();
+    public dispose() {
+        console.log("Editors.dispose()");
+        this._statusBarItems.forEach(element => {
+            element.dispose();
+        });        
     }
 }
 
-class WordCounterController {
-    private _wordCounter: WordCounter;
+class EditorsController {
+    private _editors: Editors;
     private _disposable: Disposable;
-
-    constructor(wordCounter: WordCounter) {
-        this._wordCounter = wordCounter;
-        this._wordCounter.updateWordCount();
-
+    
+    constructor(editors: Editors) {
+        this._editors = editors;
+        this._editors.update();
+        
         let subscriptions: Disposable[] = [];
-        window.onDidChangeTextEditorSelection(this._onEvent, this, subscriptions);
-        window.onDidChangeActiveTextEditor(this._onEvent, this, subscriptions);
-
-        // update the counter for the current file
-        this._wordCounter.updateWordCount(); // already did this above?
-        // create a combined disposible from both event subscriptions
-        // ... spread operator
+        window.onDidChangeActiveTextEditor(this._onChangeEvent, this, subscriptions);
+        window.onDidChangeTextEditorOptions(this._onOptionsEvent, this, subscriptions);
+        
+        this._editors.update();
         this._disposable = Disposable.from(...subscriptions);
     }
 
@@ -96,7 +104,11 @@ class WordCounterController {
         this._disposable.dispose();
     }
 
-    private _onEvent() {
-        this._wordCounter.updateWordCount();
+    private _onChangeEvent() {
+        this._editors.update();
+    }
+
+    private _onOptionsEvent() {
+        this._editors.load();
     }
 }
