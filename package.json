@@ -13,6 +13,35 @@
     "activationEvents": [
         "*"
     ],
+    "contributes": {
+        "configuration": {
+            "type": "object",
+            "title": "Editors configuration",
+            "properties": {
+                "editors.list": {
+                    "type": "array",
+                    "default": [],
+                    "items": {"type": "object"},
+                    "properties": {
+                        "name": {
+                            "type": "string",
+                            "description": "the name this editor will be known by internally examples: (notepadPlusPlus or sublimeText3)"
+                        },
+                        "label": {
+                            "type": "string",
+                            "description": "The label for the button - you can include octicons $(pencil)"
+
+                        },
+                        "command":{
+                            "type": "string",
+                            "description": "The fully escaped path to the executable"
+                        }
+                    },
+                    "required": ["name", "label", "command"]
+                }
+            }
+        }
+    },
     "main": "./out/src/extension",
     "scripts": {
         "vscode:prepublish": "node ./node_modules/vscode/bin/compile",
