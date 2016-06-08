@@ -33,8 +33,8 @@ class Editors {
     public load() {        
         console.log("Editors.load()");
         let config = workspace.getConfiguration();
-        if (config.has("editors")) {
-            this._editors = config.get("editors", []);
+        if (config.has("editors.list")) {
+            this._editors = config.get("editors.list", []);
             console.log(this._editors);
             this._editors.forEach(editor => {
                 var name = editor["name"];
