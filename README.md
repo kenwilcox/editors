@@ -1,65 +1,49 @@
 # editors README
 
-This is the README for your extension "editors". After writing up a brief description, we recommend including the following sections.
+I like playing around with Visual Studio Code (VSCode). I think it's a decient editor, but sometimes I wish I was using Sublime Text for another extension or feature I have installed.
+
+Opening Sublime and opening the same file wasn't much fun. So I created this extension.
 
 ## Features
 
-Describe specific features of your extension including screenshots of your extension in action. Image paths are relative to this README file.
+Editors allows you to configure VSCode to open the current open file in another editor of your choosing. You can configure as many as you want. Examples below show you how to add Notepad++, Sublime and Brackets.
 
-For example if there is an image subfolder under your extension project workspace:
-
-\!\[feature X\]\(images/feature-x.png\)
-
-> Tip: Many popular extensions utilize animations. This is an excellent way to show off your extension! We recommend short, focused animations that are easy to follow.
+Each editor configured gets a button in the status bar. I've thought about allowing a quick command "Ctrl+Shift+P" menu, but haven't gotten around to it yet.
 
 ## Requirements
 
-If you have any requirements or dependencies, add a section describing those and how to install and configure them.
+You will need to add configuration items for each editor you would like to use.
 
 ## Extension Settings
 
-Include if your extension adds any VS Code settings through the `contributes.configuration` extension point.
-
-For example:
+There is no hard limit to the number of editors you can configure, but you could run out of space on the status bar (hence the quick command option)
 
 This extension contributes the following settings:
 
-* `myExtension.enable`: enable/disable this extension
-* `myExtension.thing`: set to `blah` to do something
+* `editors.list`: a list of objects that contain the name, label and command for each editor
+
+For example:
+
+```json
+    "editors.list": [
+        {"name": "notepadPlusPlus", "label": "$(file-text) np++", "command":"C:\\Program Files (x86)\\Notepad++\\notepad++.exe"},
+        {"name": "sublimeText3", "label": "$(pencil) subl", "command":"C:\\Program Files\\Sublime Text 3\\sublime_text.exe"},
+        {"name": "brackets", "label": "$(browser) bkt", "command": "C:\\Program Files (x86)\\Brackets\\Brackets.exe"}              
+    ]
+```
+
+The name is currently only used in the registerCommand function so it has to be a valid JavaScript variable name
 
 ## Known Issues
 
-Calling out known issues can help limit users opening duplicate issues against your extension.
+None that I'm aware of, use the Issues tab if you find one. I have not tested it on any platform other than Windows, but there isn't any platform specific code.
 
 ## Release Notes
 
-Users appreciate release notes as you update your extension.
+### 0.0.1
 
-### 1.0.0
-
-Initial release of ...
-
-### 1.0.1
-
-Fixed issue #.
-
-### 1.1.0
-
-Added features X, Y, and Z.
+Initial release of editors
 
 -----------------------------------------------------------------------------------------------------------
-
-## Working with Markdown
-
-**Note:** You can author your README using Visual Studio Code.  Here are some useful editor keyboard shortcuts:
-
-* Split the editor (`Cmd+\` on OSX or `Ctrl+\` on Windows and Linux)
-* Toggle preview (`Shift+CMD+V` on OSX or `Shift+Ctrl+V` on Windows and Linux)
-* Press `Ctrl+Space` (Windows, Linux) or `Cmd+Space` (OSX) to see a list of Markdown snippets
-
-### For more information
-
-* [Visual Studio Code's Markdown Support](http://code.visualstudio.com/docs/languages/markdown)
-* [Markdown Syntax Reference](https://help.github.com/articles/markdown-basics/)
 
 **Enjoy!**
